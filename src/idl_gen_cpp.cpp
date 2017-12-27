@@ -716,7 +716,7 @@ class CppGenerator : public BaseGenerator {
     auto num_fields =
         struct_def ? struct_def->fields.vec.size() : enum_def->vals.vec.size();
     code_.SetValue("NUM_FIELDS", NumToString(num_fields));
-    bool has_attributes = false;
+    bool has_field_attributes = false;
     std::vector<std::string> names;
     std::vector<Type> types;
     std::vector<const SymbolTable<Value>*> attrs;
@@ -728,7 +728,7 @@ class CppGenerator : public BaseGenerator {
         names.push_back(Name(field));
         types.push_back(field.value.type);
         attrs.push_back(&field.attributes);
-        has_attributes |= !field.attributes.dict.empty();
+        has_field_attributes |= !field.attributes.dict.empty();
       }
     } else {
       for (auto it = enum_def->vals.vec.begin(); it != enum_def->vals.vec.end();
@@ -738,7 +738,7 @@ class CppGenerator : public BaseGenerator {
         types.push_back(enum_def->is_union ? ev.union_type
                                            : Type(enum_def->underlying_type));
         attrs.push_back(&enum_def->attributes);
-        has_attributes |= !enum_def->attributes.dict.empty();
+        has_field_attributes |= !enum_def->attributes.dict.empty();
         if (static_cast<int64_t>(it - enum_def->vals.vec.begin()) != ev.value) {
           consecutive_enum_from_zero = false;
         }
@@ -820,53 +820,44 @@ class CppGenerator : public BaseGenerator {
     if (!vs.empty()) {
       code_ += "  static const int32_t values[] = { {{VALUES}} };";
     }
-    std::vector<size_t> field_attr_counts;
-    std::vector<std::pair<std::string, std::string>> field_attrs;
-    has_attributes &= parser_.opts.reflect_attrs;
-    if (has_attributes) {
-      for (const SymbolTable<Value> *attr : attrs) {
-        if (attr->dict.empty()) {
-          field_attr_counts.push_back(0);
-          field_attrs.push_back({});
-        } else {
-          std::string attr_keys = "{";
-          std::string attr_vals = "{";
-          std::string sep = " ";
-          // TODO(joshv): the `dict` field does not preserve the insertion order
-          // of the attributes (the in-file order), but the `vec` field cannot be
-          // used to access both key and value in linear time. Add a `keys` field.
-          for (const auto &strvaluepair : attr->dict) {
-            attr_keys += sep + "\"" + strvaluepair.first + "\"";
-            attr_vals += sep + EscapeString(strvaluepair.second->constant, true);
-            sep = ", ";
-          }
-          attr_keys += " }";
-          attr_vals += " }";
-          field_attr_counts.push_back(attr->dict.size());
-          vector_emplace_back(&field_attrs, std::make_pair(std::move(attr_keys),
-                                                           std::move(attr_vals)));
-        }
-      }
+    has_field_attributes &= parser_.opts.reflect_attrs;
+    if (has_field_attributes) {
       std::string field_attr_decl;
-      for (size_t i = 0; i < field_attrs.size(); ++i) {
+      for (size_t index = 0; index < attrs.size(); index++) {
+        const SymbolTable<Value> *attr = attrs[index];
         if (!field_attr_decl.empty()) field_attr_decl += ",\n    ";
-        if (!field_attr_counts[i]) {
+        if (attr->dict.empty()) {
           field_attr_decl += "{}";
           continue;
         }
-        const std::string index = NumToString(i);
-        code_.SetValue("IDX", index);
-        code_.SetValue("FA_KEYS", field_attrs[i].first);
-        code_.SetValue("FA_VALS", field_attrs[i].second);
+
+        std::string sep = " ";
+        std::string attr_keys = "{";
+        std::string attr_vals = "{";
+        // TODO(joshv): the `dict` field does not preserve the insertion order
+        // of the attributes (the in-file order), but the `vec` field cannot be
+        // used to access both key and value in linear time. Add a `keys` field.
+        for (const auto &strvaluepair : attr->dict) {
+          attr_keys += sep + "\"" + strvaluepair.first + "\"";
+          attr_vals += sep + EscapeString(strvaluepair.second->constant, true);
+          sep = ", ";
+        }
+        attr_keys += " }";
+        attr_vals += " }";
+
+        const std::string idx = NumToString(index);
+        code_.SetValue("IDX", idx);
+        code_.SetValue("FA_KEYS", attr_keys);
+        code_.SetValue("FA_VALS", attr_vals);
         code_ += "  static const char* attr_keys_{{IDX}}[] = {{FA_KEYS}};";
         code_ += "  static const char* attr_vals_{{IDX}}[] = {{FA_VALS}};";
-        field_attr_decl += "{ " + NumToString(field_attr_counts[i]) + ", ";
-        field_attr_decl += "attr_keys_" + index + ", ";
-        field_attr_decl += "attr_vals_" + index + " }";
+        field_attr_decl += "{ " + NumToString(attr->dict.size()) + ", ";
+        field_attr_decl += "attr_keys_" + idx + ", ";
+        field_attr_decl += "attr_vals_" + idx + " }";
       }
-      code_.SetValue("ATTRS", field_attr_decl);
+      code_.SetValue("FIELD_ATTRS", field_attr_decl);
       code_ += "  static const flatbuffers::AttributeList attrs[] = {";
-      code_ += "    {{ATTRS}}";
+      code_ += "    {{FIELD_ATTRS}}";
       code_ += "  };";
     }
     bool has_names = num_fields && parser_.opts.reflect_names;
@@ -881,7 +872,7 @@ class CppGenerator : public BaseGenerator {
              (!type_refs.empty() ? "type_refs, " : "nullptr, ") +
              (!vs.empty() ? "values, " : "nullptr, ") +
              (has_names ? "names, " : "nullptr, ") +
-             (has_attributes ? "attrs" : "nullptr");
+             (has_field_attributes ? "field_attrs" : "nullptr");
     code_ += "  };";
     code_ += "  return &tt;";
     code_ += "}";
