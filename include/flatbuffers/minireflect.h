@@ -332,6 +332,23 @@ inline std::string FlatBufferToString(const uint8_t *buffer,
   return tostring_visitor.s;
 }
 
+inline std::map<std::string, std::map<std::string, std::string>>
+FlatBufferFieldAttributes(const TypeTable *type_table) {
+  std::map<std::string, std::map<std::string, std::string>> result;
+  if (!type_table->names) return result;
+  for (size_t i = 0; i < type_table->num_elems; ++i) {
+    std::map<std::string, std::string> &attrs = result[type_table->names[i]];
+    // Leave all maps empty if we have no attributes.
+    if (!type_table->attributes) continue;
+
+    const AttributeList &attr_list = type_table->attributes[i];
+    for (size_t j = 0; j < attr_list.num_elems; ++j) {
+      attrs[attr_list.keys[j]] = attr_list.values[j];
+    }
+  }
+  return result;
+}
+
 }  // namespace flatbuffers
 
 #endif  // FLATBUFFERS_MINIREFLECT_H_

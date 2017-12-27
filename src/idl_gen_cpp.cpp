@@ -279,7 +279,7 @@ class CppGenerator : public BaseGenerator {
     }
 
     // Generate code for mini reflection.
-    if (parser_.opts.mini_reflect != IDLOptions::kNone) {
+    if (parser_.opts.mini_reflect) {
       // To break cyclic dependencies, first pre-declare all tables/structs.
       for (auto it = parser_.structs_.vec.begin();
            it != parser_.structs_.vec.end(); ++it) {
@@ -716,15 +716,19 @@ class CppGenerator : public BaseGenerator {
     auto num_fields =
         struct_def ? struct_def->fields.vec.size() : enum_def->vals.vec.size();
     code_.SetValue("NUM_FIELDS", NumToString(num_fields));
+    bool has_attributes = false;
     std::vector<std::string> names;
     std::vector<Type> types;
-    bool consecutive_enum_from_zero = true;
+    std::vector<const SymbolTable<Value>*> attrs;
+    bool consecutive_enum_from_zero = false;
     if (struct_def) {
       for (auto it = struct_def->fields.vec.begin();
            it != struct_def->fields.vec.end(); ++it) {
         const auto &field = **it;
         names.push_back(Name(field));
         types.push_back(field.value.type);
+        attrs.push_back(&field.attributes);
+        has_attributes |= !field.attributes.dict.empty();
       }
     } else {
       for (auto it = enum_def->vals.vec.begin(); it != enum_def->vals.vec.end();
@@ -733,6 +737,8 @@ class CppGenerator : public BaseGenerator {
         names.push_back(Name(ev));
         types.push_back(enum_def->is_union ? ev.union_type
                                            : Type(enum_def->underlying_type));
+        attrs.push_back(&enum_def->attributes);
+        has_attributes |= !enum_def->attributes.dict.empty();
         if (static_cast<int64_t>(it - enum_def->vals.vec.begin()) != ev.value) {
           consecutive_enum_from_zero = false;
         }
@@ -814,8 +820,56 @@ class CppGenerator : public BaseGenerator {
     if (!vs.empty()) {
       code_ += "  static const int32_t values[] = { {{VALUES}} };";
     }
-    auto has_names =
-        num_fields && parser_.opts.mini_reflect == IDLOptions::kTypesAndNames;
+    std::vector<size_t> field_attr_counts;
+    std::vector<std::pair<std::string, std::string>> field_attrs;
+    has_attributes &= parser_.opts.reflect_attrs;
+    if (has_attributes) {
+      for (const SymbolTable<Value> *attr : attrs) {
+        if (attr->dict.empty()) {
+          field_attr_counts.push_back(0);
+          field_attrs.push_back({});
+        } else {
+          std::string attr_keys = "{";
+          std::string attr_vals = "{";
+          std::string sep = " ";
+          // TODO(joshv): the `dict` field does not preserve the insertion order
+          // of the attributes (the in-file order), but the `vec` field cannot be
+          // used to access both key and value in linear time. Add a `keys` field.
+          for (const auto &strvaluepair : attr->dict) {
+            attr_keys += sep + "\"" + strvaluepair.first + "\"";
+            attr_vals += sep + EscapeString(strvaluepair.second->constant, true);
+            sep = ", ";
+          }
+          attr_keys += " }";
+          attr_vals += " }";
+          field_attr_counts.push_back(attr->dict.size());
+          vector_emplace_back(&field_attrs, std::make_pair(std::move(attr_keys),
+                                                           std::move(attr_vals)));
+        }
+      }
+      std::string field_attr_decl;
+      for (size_t i = 0; i < field_attrs.size(); ++i) {
+        if (!field_attr_decl.empty()) field_attr_decl += ",\n    ";
+        if (!field_attr_counts[i]) {
+          field_attr_decl += "{}";
+          continue;
+        }
+        const std::string index = NumToString(i);
+        code_.SetValue("IDX", index);
+        code_.SetValue("FA_KEYS", field_attrs[i].first);
+        code_.SetValue("FA_VALS", field_attrs[i].second);
+        code_ += "  static const char* attr_keys_{{IDX}}[] = {{FA_KEYS}};";
+        code_ += "  static const char* attr_vals_{{IDX}}[] = {{FA_VALS}};";
+        field_attr_decl += "{ " + NumToString(field_attr_counts[i]) + ", ";
+        field_attr_decl += "attr_keys_" + index + ", ";
+        field_attr_decl += "attr_vals_" + index + " }";
+      }
+      code_.SetValue("ATTRS", field_attr_decl);
+      code_ += "  static const flatbuffers::AttributeList attrs[] = {";
+      code_ += "    {{ATTRS}}";
+      code_ += "  };";
+    }
+    bool has_names = num_fields && parser_.opts.reflect_names;
     if (has_names) {
       code_ += "  static const char *names[] = {";
       code_ += "    {{NAMES}}";
@@ -826,7 +880,8 @@ class CppGenerator : public BaseGenerator {
              (num_fields ? "type_codes, " : "nullptr, ") +
              (!type_refs.empty() ? "type_refs, " : "nullptr, ") +
              (!vs.empty() ? "values, " : "nullptr, ") +
-             (has_names ? "names" : "nullptr");
+             (has_names ? "names, " : "nullptr, ") +
+             (has_attributes ? "attrs" : "nullptr");
     code_ += "  };";
     code_ += "  return &tt;";
     code_ += "}";
