@@ -716,9 +716,9 @@ class CppGenerator : public BaseGenerator {
     // TODO(joshv): the `dict` field does not preserve the insertion order
     // of the symbols (their in-file order), and the `vec` field cannot be
     // used to access both key and value in linear time. Add a `keys` field.
-    for (const auto &strvaluepair : stable.dict) {
-      *keys += sep + "\"" + strvaluepair.first + "\"";
-      *vals += sep + EscapeString(strvaluepair.second->constant, true);
+    for (auto it = stable.dict.begin(); it != stable.dict.end(); ++it) {
+      *keys += sep + "\"" + it->first + "\"";
+      *vals += sep + EscapeString(it->second->constant, true);
       sep = ", ";
     }
     *keys += " }";
