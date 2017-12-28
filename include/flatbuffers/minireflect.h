@@ -332,19 +332,27 @@ inline std::string FlatBufferToString(const uint8_t *buffer,
   return tostring_visitor.s;
 }
 
+inline std::map<std::string, std::string>
+AttributeListToMap(const AttributeList &attr_list) {
+  std::map<std::string, std::string> result;
+  for (size_t j = 0; j < attr_list.num_elems; ++j) {
+    result[attr_list.keys[j]] = attr_list.values[j];
+  }
+  return result;
+}
+
+inline std::map<std::string, std::string>
+FlatBufferTypeAttributes(const TypeTable *type_table) {
+  return AttributeListToMap(type_table->attributes);
+}
+
 inline std::map<std::string, std::map<std::string, std::string>>
 FlatBufferFieldAttributes(const TypeTable *type_table) {
   std::map<std::string, std::map<std::string, std::string>> result;
-  if (!type_table->names) return result;
+  if (!type_table->names || !type_table->field_attributes) return result;
   for (size_t i = 0; i < type_table->num_elems; ++i) {
-    std::map<std::string, std::string> &attrs = result[type_table->names[i]];
-    // Leave all maps empty if we have no attributes.
-    if (!type_table->attributes) continue;
-
-    const AttributeList &attr_list = type_table->attributes[i];
-    for (size_t j = 0; j < attr_list.num_elems; ++j) {
-      attrs[attr_list.keys[j]] = attr_list.values[j];
-    }
+    result[type_table->names[i]] =
+        AttributeListToMap(type_table->field_attributes[i]);
   }
   return result;
 }

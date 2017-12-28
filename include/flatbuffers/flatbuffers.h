@@ -2156,7 +2156,8 @@ struct TypeTable {
   const TypeFunction *type_refs;
   const int32_t *values;  // Only set for non-consecutive enum/union or structs.
   const char **names;     // Only set if compiled with --reflect-names.
-  const AttributeList *attributes; // Only set if compiled with --reflect-attrs.
+  const AttributeList attributes; // Only set if compiled with --reflect-attrs.
+  const AttributeList *field_attributes; // Also only with --reflect-attrs.
 };
 
 // String which identifies the current version of FlatBuffers.

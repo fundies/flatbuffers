@@ -828,6 +828,9 @@ void ReflectAttributesTest() {
   TEST_EQ(attrs_by_field.find("testhashs32_fnv1") != attrs_by_field.end(), true);
   auto &attr_testhashs32_fnv1 = attrs_by_field["testhashs32_fnv1"];
   TEST_EQ(attr_testhashs32_fnv1["hash"], std::string("fnv1_32"));
+
+  auto vec3_attrs = FlatBufferTypeAttributes(Vec3TypeTable());
+  TEST_EQ(vec3_attrs["force_align"], std::string("16"));
 }
 
 // Parse a .proto schema, output as .fbs
