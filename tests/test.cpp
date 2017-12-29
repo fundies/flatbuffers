@@ -818,19 +818,47 @@ void MiniReflectFlatBuffersTest(uint8_t *flatbuf) {
       "}");
 }
 
+void CheckAttrEq(flatbuffers::TypeTable *table, const std::string &field,
+                 const std::string &attr, const char *expected) {
+  bool pass;
+  const char *value = LookUpFieldAttribute(table, field, attr);
+  if (!expected) {
+    pass = !value;
+  } else if (!value) {
+    pass = !expected;
+  } else {
+    pass = !strcmp(value, expected);
+  }
+  if (!pass) {
+    TEST_OUTPUT_LINE("Expected %s's '%s' attribute to be %s, but got %s",
+        field.c_str(), attr.c_str(),
+        (expected ? ("\"" + std::string(expected) + "\"").c_str() : "null"),
+        (value ? ("\"" + std::string(value) + "\"").c_str() : "null"));
+    assert(pass);
+  }
+}
+
 void ReflectAttributesTest() {
-  auto attrs_by_field = FlatBufferFieldAttributes(MonsterTypeTable());
-
-  TEST_EQ(attrs_by_field.find("friendly") != attrs_by_field.end(), true);
-  auto &attr_friendly = attrs_by_field["friendly"];
-  TEST_EQ(attr_friendly["priority"], std::string("1"));
-
-  TEST_EQ(attrs_by_field.find("testhashs32_fnv1") != attrs_by_field.end(), true);
-  auto &attr_testhashs32_fnv1 = attrs_by_field["testhashs32_fnv1"];
-  TEST_EQ(attr_testhashs32_fnv1["hash"], std::string("fnv1_32"));
-
-  auto vec3_attrs = FlatBufferTypeAttributes(Vec3TypeTable());
-  TEST_EQ(vec3_attrs["force_align"], std::string("16"));
+  static const char *const kDefaultAttrValue = "0";
+  const auto tat3 = TestAttributeTableTypeTable();
+  CheckAttrEq(MonsterTypeTable(), "friendly", "priority", "1");
+  CheckAttrEq(tat3, "dog", "feeding", "omnivorous");
+  CheckAttrEq(tat3, "cat", "feeding", "carnivorous");
+  CheckAttrEq(tat3, "goat", "feeding", "superomnivorous");
+  CheckAttrEq(tat3, "platypus", "feeding", "carnivorous");
+  CheckAttrEq(tat3, "platypus", "lays_eggs", kDefaultAttrValue);
+  CheckAttrEq(tat3, "emu", "feeding", "omnivorous");
+  CheckAttrEq(tat3, "emu", "lays_eggs", kDefaultAttrValue);
+  CheckAttrEq(tat3, "beaver", "feeding", "herbivorous");
+  CheckAttrEq(tat3, "ocelot", "feeding", "carnivorous");
+  CheckAttrEq(tat3, "axolotl", "feeding", "carnivorous");
+  CheckAttrEq(tat3, "axolotl", "lays_eggs", kDefaultAttrValue);
+  CheckAttrEq(tat3, "phoenix", "lays_eggs", kDefaultAttrValue);
+  CheckAttrEq(tat3, "phoenix", "invincible", kDefaultAttrValue);
+  CheckAttrEq(tat3, "stick", "invincible", kDefaultAttrValue);
+  const char *value = LookUpTypeAttribute(tat3, "invincible");
+  TEST_NOTNULL(value);
+  TEST_EQ_STR(value, kDefaultAttrValue);
 }
 
 // Parse a .proto schema, output as .fbs
