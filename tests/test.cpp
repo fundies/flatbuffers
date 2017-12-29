@@ -821,7 +821,6 @@ void MiniReflectFlatBuffersTest(uint8_t *flatbuf) {
 void CheckAttrEq(flatbuffers::TypeTable *table, const std::string &field,
                  const std::string &attr, const char *expected) {
   bool pass;
-  printf("CHECKING ATTR EQUAL %s.%s = %s", field.c_str(), attr.c_str(), expected);
   const char *value = LookUpFieldAttribute(table, field, attr);
   if (!expected) {
     pass = !value;
@@ -857,9 +856,14 @@ void ReflectAttributesTest() {
   CheckAttrEq(tat3, "phoenix", "lays_eggs", kDefaultAttrValue);
   CheckAttrEq(tat3, "phoenix", "invincible", kDefaultAttrValue);
   CheckAttrEq(tat3, "stick", "invincible", kDefaultAttrValue);
-  const char *value = LookUpTypeAttribute(tat3, "invincible");
-  TEST_NOTNULL(value);
-  TEST_EQ_STR(value, kDefaultAttrValue);
+  CheckAttrEq(tat3, "dog", "lays_eggs", nullptr);
+  CheckAttrEq(tat3, "cat", "lays_eggs", nullptr);
+  CheckAttrEq(tat3, "platypus", "invincible", nullptr);
+  CheckAttrEq(tat3, "emu", "doesnotexist", nullptr);
+  CheckAttrEq(tat3, "doesnotexist", "doesnotexist", nullptr);
+  // const char *type_attribute = LookUpTypeAttribute(tat3, "invincible");
+  // assert(type_attribute != nullptr);
+  // TEST_EQ_STR(type_attribute, kDefaultAttrValue);
 }
 
 // Parse a .proto schema, output as .fbs
