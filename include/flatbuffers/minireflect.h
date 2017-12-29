@@ -334,6 +334,7 @@ inline std::string FlatBufferToString(const uint8_t *buffer,
 
 const char *LookUpAttribute(RawAttributeList list, const std::string &key) {
   if (list == nullptr) return nullptr;
+  printf("list has %lu attributes\n", list->num_elems);
   for (size_t i = 0; i < list->num_elems; ++i) {
     if (list->attributes[i].key == key) return list->attributes[i].value;
   }
@@ -348,6 +349,7 @@ const char *LookUpFieldAttribute(const TypeTable *type,
                                  const std::string &field,
                                  const std::string &key) {
   if (!type->field_attributes || !type->names) return nullptr;
+  printf("type has %lu fields\n", type->num_elems);
   for (size_t i = 0; i < type->num_elems; ++i) {
     if (type->names[i] == field) {
       return LookUpAttribute(type->field_attributes[i], key);

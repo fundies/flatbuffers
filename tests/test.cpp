@@ -821,6 +821,7 @@ void MiniReflectFlatBuffersTest(uint8_t *flatbuf) {
 void CheckAttrEq(flatbuffers::TypeTable *table, const std::string &field,
                  const std::string &attr, const char *expected) {
   bool pass;
+  printf("CHECKING ATTR EQUAL %s.%s = %s", field.c_str(), attr.c_str(), expected);
   const char *value = LookUpFieldAttribute(table, field, attr);
   if (!expected) {
     pass = !value;
@@ -841,10 +842,9 @@ void CheckAttrEq(flatbuffers::TypeTable *table, const std::string &field,
 void ReflectAttributesTest() {
   // static const char *const kDefaultAttrValue = "0";
   const auto tat3 = TestAttributeTableTypeTable();
-  (void) tat3;
-/*  CheckAttrEq(MonsterTypeTable(), "friendly", "priority", "1");
+  CheckAttrEq(MonsterTypeTable(), "friendly", "priority", "1");
   CheckAttrEq(tat3, "dog", "feeding", "omnivorous");
-  CheckAttrEq(tat3, "cat", "feeding", "carnivorous");
+/*  CheckAttrEq(tat3, "cat", "feeding", "carnivorous");
   CheckAttrEq(tat3, "goat", "feeding", "superomnivorous");
   CheckAttrEq(tat3, "platypus", "feeding", "carnivorous");
   CheckAttrEq(tat3, "platypus", "lays_eggs", kDefaultAttrValue);
