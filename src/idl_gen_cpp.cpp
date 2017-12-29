@@ -733,7 +733,8 @@ class CppGenerator : public BaseGenerator {
       ++count;
     }
     initializer += " } }";
-    return {count, initializer};
+    SerializedAttrs result = {count, initializer};
+    return result;
   }
 
   void GenMiniReflect(const StructDef *struct_def, const EnumDef *enum_def) {
