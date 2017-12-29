@@ -862,9 +862,9 @@ void ReflectAttributesTest() {
   CheckAttrEq(tat3, "platypus", "invincible", nullptr);
   CheckAttrEq(tat3, "emu", "doesnotexist", nullptr);
   CheckAttrEq(tat3, "doesnotexist", "doesnotexist", nullptr);
-  // const char *type_attribute = LookUpTypeAttribute(tat3, "invincible");
-  // assert(type_attribute != nullptr);
-  // TEST_EQ_STR(type_attribute, kDefaultAttrValue);
+  const char *type_attribute = LookUpTypeAttribute(tat3, "invincible");
+  assert(type_attribute != nullptr
+            && !strcmp(type_attribute, kDefaultAttrValue));
 }
 
 // Parse a .proto schema, output as .fbs
