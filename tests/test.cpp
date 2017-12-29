@@ -863,8 +863,11 @@ void ReflectAttributesTest() {
   CheckAttrEq(tat3, "emu", "doesnotexist", nullptr);
   CheckAttrEq(tat3, "doesnotexist", "doesnotexist", nullptr);
   const char *type_attribute = LookUpTypeAttribute(tat3, "invincible");
-  assert(type_attribute != nullptr
-            && !strcmp(type_attribute, kDefaultAttrValue));
+  if (!type_attribute || strcmp(type_attribute, kDefaultAttrValue)) {
+    TEST_OUTPUT_LINE("Expected type attribute 'invincible' to be 0, but got %s",
+        (type_attribute ? ("\"" + std::string(type_attribute) + "\"").c_str()
+                        : "null"));
+  }
 }
 
 // Parse a .proto schema, output as .fbs
