@@ -840,11 +840,11 @@ void CheckAttrEq(flatbuffers::TypeTable *table, const std::string &field,
 }
 
 void ReflectAttributesTest() {
-  // static const char *const kDefaultAttrValue = "0";
+  static const char *const kDefaultAttrValue = "0";
   const auto tat3 = TestAttributeTableTypeTable();
   CheckAttrEq(MonsterTypeTable(), "friendly", "priority", "1");
   CheckAttrEq(tat3, "dog", "feeding", "omnivorous");
-/*  CheckAttrEq(tat3, "cat", "feeding", "carnivorous");
+  CheckAttrEq(tat3, "cat", "feeding", "carnivorous");
   CheckAttrEq(tat3, "goat", "feeding", "superomnivorous");
   CheckAttrEq(tat3, "platypus", "feeding", "carnivorous");
   CheckAttrEq(tat3, "platypus", "lays_eggs", kDefaultAttrValue);
@@ -857,7 +857,7 @@ void ReflectAttributesTest() {
   CheckAttrEq(tat3, "phoenix", "lays_eggs", kDefaultAttrValue);
   CheckAttrEq(tat3, "phoenix", "invincible", kDefaultAttrValue);
   CheckAttrEq(tat3, "stick", "invincible", kDefaultAttrValue);
-  const char *value = LookUpTypeAttribute(tat3, "invincible");
+/*  const char *value = LookUpTypeAttribute(tat3, "invincible");
   TEST_NOTNULL(value);
   TEST_EQ_STR(value, kDefaultAttrValue);*/
 }
