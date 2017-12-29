@@ -839,7 +839,7 @@ void CheckAttrEq(flatbuffers::TypeTable *table, const std::string &field,
 }
 
 void ReflectAttributesTest() {
-  static const char *const kDefaultAttrValue = "0";
+  // static const char *const kDefaultAttrValue = "0";
   const auto tat3 = TestAttributeTableTypeTable();
   (void) tat3;
 /*  CheckAttrEq(MonsterTypeTable(), "friendly", "priority", "1");
