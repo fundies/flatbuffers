@@ -861,7 +861,7 @@ class CppGenerator : public BaseGenerator {
     bool has_attributes = parser_.opts.reflect_attrs && type_attrs.count;
     if (has_attributes) {
       code_ += "  static const flatbuffers::AttributeList<{{ATTR_COUNT}}>"
-               " attrs = {{ATTR_LIST}};";
+               " attrs {{ATTR_LIST}};";
     }
     static const std::string kAttrListCast =
         "reinterpret_cast<flatbuffers::RawAttributeList>";
@@ -872,7 +872,7 @@ class CppGenerator : public BaseGenerator {
       // Allow reusing our Table's attribute list for its attributes.
       attr_interning[type_attrs.initializer] = "attrs";
       code_ += "# define DECL_FA_LIST(id, size) "
-          "static const flatbuffers::AttributeList<size> attr_list_ ## id =";
+          "static const flatbuffers::AttributeList<size> attr_list_ ## id";
       code_ += "# define CAST_FA_LIST(list) (" + kAttrListCast + "(&(list)))";
       for (size_t i = 0; i < field_attrs.size(); i++) {
         if (!field_attr_decl.empty()) field_attr_decl += ",\n    ";

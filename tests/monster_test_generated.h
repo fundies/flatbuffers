@@ -2411,7 +2411,7 @@ inline flatbuffers::TypeTable *MonsterTypeTable() {
     "vector_of_doubles",
     "parent_namespace_test"
   };
-# define DECL_FA_LIST(id, size) static const flatbuffers::AttributeList<size> attr_list_ ## id =
+# define DECL_FA_LIST(id, size) static const flatbuffers::AttributeList<size> attr_list_ ## id
 # define CAST_FA_LIST(list) (reinterpret_cast<flatbuffers::RawAttributeList>(&(list)))
   DECL_FA_LIST(4, 1) { 3, { { "priority", "1" } } };
   static const flatbuffers::RawAttributeList field_attrs[] = {
@@ -2484,8 +2484,8 @@ inline flatbuffers::TypeTable *TestAttributeTableTypeTable() {
     "phoenix",
     "stick"
   };
-  static const flatbuffers::AttributeList<1> attrs = { 1, { { "invincible", "0" } } };
-# define DECL_FA_LIST(id, size) static const flatbuffers::AttributeList<size> attr_list_ ## id =
+  static const flatbuffers::AttributeList<1> attrs { 1, { { "invincible", "0" } } };
+# define DECL_FA_LIST(id, size) static const flatbuffers::AttributeList<size> attr_list_ ## id
 # define CAST_FA_LIST(list) (reinterpret_cast<flatbuffers::RawAttributeList>(&(list)))
   DECL_FA_LIST(0, 1) { 1, { { "feeding", "omnivorous" } } };
   DECL_FA_LIST(1, 1) { 1, { { "feeding", "carnivorous" } } };
