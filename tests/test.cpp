@@ -857,9 +857,9 @@ void ReflectAttributesTest() {
   CheckAttrEq(tat3, "phoenix", "lays_eggs", kDefaultAttrValue);
   CheckAttrEq(tat3, "phoenix", "invincible", kDefaultAttrValue);
   CheckAttrEq(tat3, "stick", "invincible", kDefaultAttrValue);
-/*  const char *value = LookUpTypeAttribute(tat3, "invincible");
+  const char *value = LookUpTypeAttribute(tat3, "invincible");
   TEST_NOTNULL(value);
-  TEST_EQ_STR(value, kDefaultAttrValue);*/
+  TEST_EQ_STR(value, kDefaultAttrValue);
 }
 
 // Parse a .proto schema, output as .fbs
